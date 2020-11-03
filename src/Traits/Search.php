@@ -49,4 +49,29 @@ trait Search
     {
         $this->search = '';
     }
+
+    /**
+     * Applies search terms to the column
+     */
+    public function searchColumn(Builder $builder, $column): Builder
+    {
+        if (is_callable($column->getSearchCallback()))
+        {
+            return $builder = app()->call($column->getSearchCallback(), ['builder' => $builder, 'term' => trim
+            ($this->search)]);
+        } else if (Str::contains($column->getAttribute(), '.'))
+        {
+            $relationship = $this->relationship($column->getAttribute());
+
+            $builder->orWhereHas($relationship->name, function (Builder $builder) use ($relationship)
+            {
+                $builder->where($relationship->attribute, 'like', '%' . trim($this->search) . '%');
+            });
+        } else
+        {
+            $builder->orWhere($builder->getModel()
+                                      ->getTable() . '.' . $column->getAttribute(), 'like', '%' . trim($this->search) . '%');
+        }
+        return $builder;
+    }
 }

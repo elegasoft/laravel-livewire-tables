@@ -58,11 +58,12 @@ abstract class TableComponent extends Component
     /**
      * TableComponent constructor.
      *
-     * @param  null  $id
+     * @param null $id
      */
     public function __construct($id = null)
     {
-        if (config('laravel-livewire-tables.theme') === 'bootstrap-4') {
+        if (config('laravel-livewire-tables.theme') === 'bootstrap-4')
+        {
             $this->paginationTheme = 'bootstrap';
         }
 
@@ -86,7 +87,7 @@ abstract class TableComponent extends Component
      */
     public function view(): string
     {
-        return 'laravel-livewire-tables::'.config('laravel-livewire-tables.theme').'.table-component';
+        return 'laravel-livewire-tables::' . config('laravel-livewire-tables.theme') . '.table-component';
     }
 
     /**
@@ -96,7 +97,7 @@ abstract class TableComponent extends Component
     {
         return view($this->view(), [
             'columns' => $this->columns(),
-            'models' => $this->paginationEnabled ? $this->models()->paginate($this->perPage) : $this->models()->get(),
+            'models'  => $this->paginationEnabled ? $this->models()->paginate($this->perPage) : $this->models()->get(),
         ]);
     }
 
@@ -107,27 +108,22 @@ abstract class TableComponent extends Component
     {
         $builder = $this->query();
 
-        if ($this->searchEnabled && trim($this->search) !== '') {
-            $builder->where(function (Builder $builder) {
-                foreach ($this->columns() as $column) {
-                    if ($column->isSearchable()) {
-                        if (is_callable($column->getSearchCallback())) {
-                            $builder = app()->call($column->getSearchCallback(), ['builder' => $builder, 'term' => trim($this->search)]);
-                        } elseif (Str::contains($column->getAttribute(), '.')) {
-                            $relationship = $this->relationship($column->getAttribute());
-
-                            $builder->orWhereHas($relationship->name, function (Builder $builder) use ($relationship) {
-                                $builder->where($relationship->attribute, 'like', '%'.trim($this->search).'%');
-                            });
-                        } else {
-                            $builder->orWhere($builder->getModel()->getTable().'.'.$column->getAttribute(), 'like', '%'.trim($this->search).'%');
-                        }
+        if ($this->searchEnabled && trim($this->search) !== '')
+        {
+            $builder->where(function (Builder $builder)
+            {
+                foreach ($this->columns() as $column)
+                {
+                    if ($column->isSearchable())
+                    {
+                        $builder = $this->searchColumn($builder, $column);
                     }
                 }
             });
         }
 
-        if (($column = $this->getColumnByAttribute($this->sortField)) !== false && is_callable($column->getSortCallback())) {
+        if (($column = $this->getColumnByAttribute($this->sortField)) !== false && is_callable($column->getSortCallback()))
+        {
             return app()->call($column->getSortCallback(), ['builder' => $builder, 'direction' => $this->sortDirection]);
         }
 
